@@ -61,9 +61,7 @@ public class ClientHandler implements Runnable{
                     String oldName = username;
                     username = newName;
                     ChatRoom.addClient(username, this);
-                    ChatRoom.display(
-                            new Message(MessageType.SYSTEM, null, null,oldName + " changed name to " + username), null
-                    );
+                    ChatRoom.display(new Message(MessageType.SYSTEM, null, null,oldName + " changed name to " + username), null);
                 }
                 break;
 

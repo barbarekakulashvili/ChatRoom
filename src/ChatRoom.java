@@ -18,12 +18,12 @@ public class ChatRoom {
         int port = scanner.nextInt();
 
         ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("GAMARJOBA SERVER");
+        System.out.println("server created");
 
         while (true) {
             try {
                 Socket socket = serverSocket.accept();
-                System.out.println("AXALI CLIENT WOHOO");
+                System.out.println("new client connected");
                 ClientHandler clientHandler = new ClientHandler(socket);
                 new Thread(clientHandler).start();
             } catch (IOException e) {
