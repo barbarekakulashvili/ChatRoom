@@ -3,11 +3,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ClientHandler implements Runnable{
-   private Socket socket;
-   private ObjectInputStream input;
-   private ObjectOutputStream output;
-   private String username;
+public class ClientHandler implements Runnable {
+    private Socket socket;
+    private ObjectInputStream input;
+    private ObjectOutputStream output;
+    private String username;
 
     public ClientHandler(Socket socket) throws IOException {
         this.socket = socket;
@@ -23,7 +23,7 @@ public class ClientHandler implements Runnable{
             sendMessage(new Message(MessageType.SYSTEM, "SERVER", null, "Welcome to chat. Your name is " + username));
             ChatRoom.display(new Message(MessageType.SYSTEM, "SERVER", null, username + " joined the chat!"), username);
             ChatRoom.display(new Message(MessageType.SYSTEM, "SERVER", null, "Users online: " + ChatRoom.getUserCount()), username);
-            while(true){
+            while (true) {
                 Message message = (Message) input.readObject();
                 handleMessage(message);
             }
@@ -38,30 +38,34 @@ public class ClientHandler implements Runnable{
     }
 
     private void handleMessage(Message message) throws IOException {
-        switch(message.getType()){
+        switch (message.getType()) {
             case CHAT:
                 ChatRoom.display(new Message(MessageType.CHAT, username, null, message.getMessage()), username);
                 break;
 
             case PRIVATE_MESSAGE:
                 ClientHandler receiver = ChatRoom.getClient(message.getMessageReceiver());
-                if(receiver != null){
+                if (receiver != null) {
                     receiver.sendMessage(new Message(MessageType.PRIVATE_MESSAGE, username, message.getMessageReceiver(), message.getMessage()));
-                }else{
+                } else {
                     sendMessage(new Message(MessageType.SYSTEM, null, null, "User not found"));
                 }
                 break;
 
             case RENAME:
                 String newName = message.getMessage();
-                if(ChatRoom.getClient(newName)!=null) {
-                    sendMessage(new Message(MessageType.SYSTEM, null, null, "Name already taken"));
-                }else{
+                if (!isValidUsername(newName)) {
+                    sendMessage(new Message(MessageType.SYSTEM, "SERVER", null, "Invalid username. Use only letters and numbers"));
+                    break;
+                }
+                if (ChatRoom.getClient(newName) != null) {
+                    sendMessage(new Message(MessageType.SYSTEM, "SERVER", null, "Name already taken"));
+                } else {
                     ChatRoom.removeClient(username);
                     String oldName = username;
                     username = newName;
                     ChatRoom.addClient(username, this);
-                    ChatRoom.display(new Message(MessageType.SYSTEM, null, null,oldName + " changed name to " + username), null);
+                    ChatRoom.display(new Message(MessageType.SYSTEM, "SERVER", null, oldName + " changed name to " + username), null);
                 }
                 break;
 
@@ -80,7 +84,7 @@ public class ClientHandler implements Runnable{
         try {
             ChatRoom.removeClient(username);
             ChatRoom.display(
-                    new Message(MessageType.SYSTEM, null, null, username + " left the chat"),
+                    new Message(MessageType.SYSTEM, "SERVER", null, username + " left the chat"),
                     username
             );
 
@@ -88,10 +92,15 @@ public class ClientHandler implements Runnable{
             if (output != null) output.close();
             if (socket != null) socket.close();
 
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
     }
 
     public String getUsername() {
         return username;
+    }
+
+    private boolean isValidUsername(String name) {
+        return name.matches("[a-zA-Z0-9]+");
     }
 }
